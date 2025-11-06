@@ -158,6 +158,39 @@ def update_user(user_id):
         return jsonify({'message': f'更新用户信息失败: {str(e)}'}), 500
 
 
+@users_bp.route('/<int:user_id>/reset-password', methods=['POST'])
+@jwt_required()
+@verify_permission('user_manage')
+def reset_user_password(user_id):
+    """管理员重置用户密码"""
+    try:
+        # 查找用户
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': '用户不存在'}), 404
+        
+        data = request.get_json()
+        
+        # 验证参数
+        if not data.get('new_password'):
+            return jsonify({'message': '新密码不能为空'}), 400
+        
+        # 更新密码
+        user.password_hash = generate_password_hash(data['new_password'])
+        db.session.commit()
+        
+        # 记录系统日志
+        from app.utils.auth import get_current_user
+        admin_user = get_current_user()
+        LogService.log_user_management(admin_user, user, 'reset_password', request)
+        
+        return jsonify({'message': '用户密码重置成功'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'重置密码失败: {str(e)}'}), 500
+
+
 @users_bp.route('/<int:user_id>', methods=['DELETE'])
 @jwt_required()
 @verify_permission('user_manage')

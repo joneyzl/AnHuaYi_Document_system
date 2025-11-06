@@ -38,12 +38,21 @@
           </template>
         </el-table-column>
         <el-table-column prop="created_at" label="创建时间" width="180" />
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="scope">
             <div class="operation-buttons">
               <el-button type="primary" size="small" @click="editUser(scope.row)">
                 <el-icon><EpEdit /></el-icon>
                 编辑
+              </el-button>
+              <el-button
+                type="warning"
+                size="small"
+                @click="resetPassword(scope.row)"
+                :disabled="scope.row.id === currentUserId"
+              >
+                <el-icon><EpLock /></el-icon>
+                重置密码
               </el-button>
               <el-button
                 type="danger"
@@ -308,6 +317,52 @@ const updateUserStatus = async (user) => {
     }
     console.error('更新状态失败详情:', error)
     console.error('错误响应:', error.response?.data)
+  }
+}
+
+const resetPassword = async (user) => {
+  try {
+    const { value: newPassword } = await ElMessageBox.prompt(
+      `请输入用户 "${user.username}" 的新密码`,
+      '重置密码',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputType: 'password',
+        inputPlaceholder: '请输入新密码',
+        inputPattern: /^.{6,}$/,
+        inputErrorMessage: '密码长度不能少于6位'
+      }
+    )
+    
+    // 确保axios请求头包含token
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${userStore.token}`
+      }
+    }
+    
+    // 确保API路径正确，避免重复的/api前缀
+    const response = await axios.post(`/users/${user.id}/reset-password`, {
+      new_password: newPassword
+    }, config)
+    console.log('重置密码响应:', response)
+    ElMessage.success('用户密码重置成功')
+  } catch (error) {
+    // 检查是否是用户取消确认对话框
+    if (error.name !== 'ElMessageBoxCancel' && error.name !== 'ElMessageBoxClose') {
+      // 处理认证错误
+      if (error.response?.status === 401) {
+        ElMessage.error('认证过期，请重新登录')
+        userStore.logout()
+      } else {
+        // 更详细的错误信息
+        const errorMsg = error.response?.data?.message || error.message || '未知错误'
+        ElMessage.error(`重置密码失败: ${errorMsg}`)
+      }
+      console.error('重置密码失败详情:', error)
+      console.error('错误响应:', error.response?.data)
+    }
   }
 }
 
