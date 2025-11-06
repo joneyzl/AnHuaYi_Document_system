@@ -1,0 +1,36 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆形 -->
+  <circle cx="100" cy="100" r="95" fill="#FFDE00" />
+  
+  <!-- 上部五星 -->
+  <path d="M100,25 L110,55 L140,55 L115,75 L125,105 L100,85 L75,105 L85,75 L60,55 L90,55 Z" fill="#DE2910" />
+  
+  <!-- 右下五星1 -->
+  <path d="M140,85 L145,95 L155,95 L148,102 L150,112 L140,108 L130,112 L132,102 L125,95 L135,95 Z" fill="#DE2910" transform="scale(0.8) translate(60, 20)" />
+  
+  <!-- 右下五星2 -->
+  <path d="M140,85 L145,95 L155,95 L148,102 L150,112 L140,108 L130,112 L132,102 L125,95 L135,95 Z" fill="#DE2910" transform="scale(0.8) translate(70, 50)" />
+  
+  <!-- 右下五星3 -->
+  <path d="M140,85 L145,95 L155,95 L148,102 L150,112 L140,108 L130,112 L132,102 L125,95 L135,95 Z" fill="#DE2910" transform="scale(0.8) translate(50, 75)" />
+  
+  <!-- 右下五星4 -->
+  <path d="M140,85 L145,95 L155,95 L148,102 L150,112 L140,108 L130,112 L132,102 L125,95 L135,95 Z" fill="#DE2910" transform="scale(0.8) translate(20, 75)" />
+  
+  <!-- 齿轮轮廓 -->
+  <path d="M100,150 m-40,0 a40,40 0 1,0 80,0 a40,40 0 1,0 -80,0" fill="none" stroke="#DE2910" stroke-width="4" />
+  
+  <!-- 齿轮齿 -->
+  <path d="M100,110 L100,90" stroke="#DE2910" stroke-width="4" />
+  <path d="M134,123 L144,103" stroke="#DE2910" stroke-width="4" />
+  <path d="M144,150 L154,150" stroke="#DE2910" stroke-width="4" />
+  <path d="M134,177 L144,197" stroke="#DE2910" stroke-width="4" />
+  <path d="M100,200 L100,180" stroke="#DE2910" stroke-width="4" />
+  <path d="M66,177 L56,197" stroke="#DE2910" stroke-width="4" />
+  <path d="M56,150 L46,150" stroke="#DE2910" stroke-width="4" />
+  <path d="M66,123 L56,103" stroke="#DE2910" stroke-width="4" />
+  
+  <!-- 齿轮内部装饰 -->
+  <circle cx="100" cy="150" r="20" fill="#DE2910" />
+  <circle cx="100" cy="150" r="10" fill="#FFDE00" />
+</svg>
