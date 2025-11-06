@@ -53,7 +53,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="created_at" label="创建时间" width="180" />
-        <el-table-column prop="created_by" label="创建者" />
+        <el-table-column prop="username" label="创建者" width="120" />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="scope">
             <div class="operation-buttons">
