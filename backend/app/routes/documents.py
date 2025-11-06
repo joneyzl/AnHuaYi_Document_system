@@ -346,6 +346,17 @@ def preview_document(document_id):
                 print(f"解析Word文档失败: {e}")
                 # 如果解析失败，继续处理
         
+        # 对于PDF文件，返回预览URL，让前端通过iframe处理
+        if ext == '.pdf':
+            # 对于PDF，我们直接返回PDF的下载URL作为预览URL（不带/api前缀，因为前端会拼接baseURL）
+            return jsonify({
+                'preview_url': f'/documents/{document_id}/download',
+                'file_extension': ext,
+                'file_name': document.file_name,
+                'needs_download': False,
+                'is_pdf': True
+            })
+            
         # 对于文本类型的文件，可以直接返回内容
         if ext in ['.txt', '.md', '.json', '.log', '.csv', '.xml', '.html', '.htm']:
             try:
@@ -372,18 +383,18 @@ def preview_document(document_id):
         
         # 对于图片类型的文件，返回预览URL
         if ext in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
-            # 对于图片，我们直接返回图片的下载URL作为预览URL
+            # 对于图片，我们直接返回图片的下载URL作为预览URL（不带/api前缀，因为前端会拼接baseURL）
             return jsonify({
-                'preview_url': f'/api/documents/{document_id}/download',
+                'preview_url': f'/documents/{document_id}/download',
                 'file_extension': ext,
                 'file_name': document.file_name,
                 'is_image': True
             })
         
         # 对于其他文件类型，返回文件URL让前端通过下载方式处理
-        # 生成一个临时的预览URL或直接使用下载端点
+        # 生成一个临时的预览URL或直接使用下载端点（不带/api前缀，因为前端会拼接baseURL）
         return jsonify({
-            'preview_url': f'/api/documents/{document_id}/download',
+            'preview_url': f'/documents/{document_id}/download',
             'file_extension': ext,
             'file_name': document.file_name,
             'needs_download': True
@@ -428,8 +439,8 @@ def download_document(document_id):
         db.session.add(log)
         db.session.commit()
         
-        # 返回文件
-        return send_file(file_path, as_attachment=True, download_name=document.original_filename)
+        # 返回文件，设置as_attachment为False以便在浏览器中直接显示PDF
+        return send_file(file_path, as_attachment=False, download_name=document.file_name)
     
     except Exception as e:
         return jsonify({'message': f'下载文档失败: {str(e)}'}), 500

@@ -76,9 +76,9 @@
           </el-empty>
         </div>
         
-        <!-- PDF预览 (使用iframe) -->
+        <!-- PDF预览 (使用Blob和iframe) -->
         <div v-else-if="fileType === 'pdf'" class="pdf-preview">
-          <iframe :src="pdfViewerUrl" width="100%" height="600px" frameborder="0"></iframe>
+          <iframe :src="pdfBlobUrl" width="100%" height="600px" frameborder="0"></iframe>
         </div>
       </div>
     </el-card>
@@ -105,6 +105,7 @@ const needsDownload = ref(false)
 const previewUrl = ref('')
 const documentId = computed(() => route.params.id)
 const dialogVisible = ref(false)
+const pdfBlobUrl = ref('')
 
 // 计算文件类型
 const fileType = computed(() => {
@@ -128,8 +129,29 @@ const renderedMarkdown = computed(() => {
 // PDF预览URL
 const pdfViewerUrl = computed(() => {
   if (fileType.value === 'pdf') {
-    // 对于PDF，可以尝试使用PDF.js或直接使用浏览器预览
-    return previewUrl.value || `/documents/${documentId.value}/download`
+    // 处理PDF预览URL，确保包含API基础路径和认证信息
+    const baseUrl = axios.defaults.baseURL || ''
+    let path = previewUrl.value || `/documents/${documentId.value}/download`
+    const token = localStorage.getItem('token') || ''
+    
+    // 如果路径已经是完整URL，则直接返回
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path
+    }
+    
+    // 处理路径，避免重复的/api前缀
+  // 移除路径开头的/api如果baseUrl已经包含/api
+  if (baseUrl.includes('/api') && path.startsWith('/api')) {
+    path = path.substring(4) // 移除开头的/api
+  }
+
+  // 构建完整URL，确保路径格式正确
+  const fullUrl = baseUrl.endsWith('/') && path.startsWith('/') 
+    ? `${baseUrl.slice(0, -1)}${path}`
+    : `${baseUrl}${path}`
+
+  // 对于PDF预览，我们将在组件中处理认证头，而不是作为查询参数
+  return fullUrl
   }
   return ''
 })
@@ -171,6 +193,7 @@ const loadDocumentPreview = async () => {
   
   try {
     const token = localStorage.getItem('token')
+    // 使用正确的路径，避免重复的/api前缀
     const response = await axios.get(`/documents/${documentId.value}/preview`, {
       headers: {
         'Authorization': token ? `Bearer ${token}` : ''
@@ -179,7 +202,58 @@ const loadDocumentPreview = async () => {
     
     const data = response.data
     
-    if (data.is_image) {
+    // 处理PDF文件
+    if (data.is_pdf) {
+      documentContent.value = ''
+      fileExtension.value = data.file_extension || '.pdf'
+      documentTitle.value = data.file_name || `PDF文档预览 - ${documentId.value}`
+      previewUrl.value = data.preview_url || ''
+      needsDownload.value = false
+      
+      // 加载PDF内容并设置blob URL
+      try {
+        const token = localStorage.getItem('token')
+        
+        // 构建完整的PDF URL
+        const baseUrl = axios.defaults.baseURL || ''
+        let path = previewUrl.value || `/documents/${documentId.value}/download`
+        
+        // 如果路径已经是完整URL，则直接使用
+        let fullUrl = path
+        if (!path.startsWith('http://') && !path.startsWith('https://')) {
+          // 处理路径，避免重复的/api前缀
+          if (baseUrl.includes('/api') && path.startsWith('/api')) {
+            path = path.substring(4) // 移除开头的/api
+          }
+          
+          // 构建完整URL，确保路径格式正确
+          fullUrl = baseUrl.endsWith('/') && path.startsWith('/') 
+            ? `${baseUrl.slice(0, -1)}${path}`
+            : `${baseUrl}${path}`
+        }
+        
+        const response = await fetch(fullUrl, {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error(`加载PDF失败: ${response.status}`)
+        }
+        
+        const blob = await response.blob()
+        // 先释放旧的blob URL，避免内存泄漏
+        if (pdfBlobUrl.value) {
+          window.URL.revokeObjectURL(pdfBlobUrl.value)
+        }
+        // 创建新的blob URL
+        pdfBlobUrl.value = window.URL.createObjectURL(blob)
+      } catch (err) {
+        console.error('加载PDF失败:', err)
+        error.value = '加载PDF文档失败，请尝试下载查看'
+      }
+    } else if (data.is_image) {
       // 处理图片类型
       documentContent.value = '' // 清空内容，使用previewUrl
       fileExtension.value = data.file_extension || ''
