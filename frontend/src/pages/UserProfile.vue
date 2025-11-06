@@ -175,7 +175,7 @@ const changePassword = async () => {
       }
     }
     
-    const response = await axios.put('/api/auth/change-password', {
+    const response = await axios.put('/auth/change-password', {
       old_password: passwordForm.oldPassword,
       new_password: passwordForm.newPassword
     }, config)
