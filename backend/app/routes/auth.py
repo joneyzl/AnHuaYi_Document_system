@@ -126,7 +126,7 @@ def get_profile():
         return jsonify({'message': f'获取用户信息失败: {str(e)}'}), 500
 
 
-@auth_bp.route('/change-password', methods=['POST'])
+@auth_bp.route('/change-password', methods=['POST', 'PUT'])
 @jwt_required()
 def change_password():
     """修改密码"""
